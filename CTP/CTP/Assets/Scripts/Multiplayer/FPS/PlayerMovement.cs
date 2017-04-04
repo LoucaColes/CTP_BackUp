@@ -22,6 +22,7 @@ public class PlayerMovement : NetworkBehaviour {
         }
         float moveHorizontal = Input.GetAxis("Horizontal");
         float moveVertical = Input.GetAxis("Vertical");
+        print(moveVertical);
 
         Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
 

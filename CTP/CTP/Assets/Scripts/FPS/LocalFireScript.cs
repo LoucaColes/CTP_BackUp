@@ -18,15 +18,15 @@ public class LocalFireScript : MonoBehaviour {
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Mouse0))
-        {
-            //get required data
-            GetGunData();
-            //fire particle
-            ParticleEffect();
-            //fire raycast
-            FireRaycast();
-        }
+        //if (Input.GetKeyDown(KeyCode.F))
+        //{
+        //    //get required data
+        //    GetGunData();
+        //    //fire particle
+        //    ParticleEffect();
+        //    //fire raycast
+        //    FireRaycast();
+        //}
     }
 
     void GetGunData()

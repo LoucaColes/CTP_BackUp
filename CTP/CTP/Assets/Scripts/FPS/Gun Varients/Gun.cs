@@ -18,17 +18,22 @@ public class Gun : MonoBehaviour {
     public Transform particleSpawnPoint;
     [SerializeField]
     private float particleTime;
+    private LocalPlayer m_playerScript;
+    private int m_playerId;
+    private string m_playerTeam;
 
     // Use this for initialization
     void Start () {
         reloading = false;
         playerCamera = (GameObject)transform.parent.parent.gameObject;
+        m_playerScript = playerCamera.transform.parent.gameObject.GetComponent<LocalCameraMovement>().m_playerScript;
         currentAmountOfMags = amountOfMagazines;
-        playerHud = GameObject.FindGameObjectWithTag("HUD");
+        playerHud = playerCamera.transform.GetChild(2).gameObject;
         playerHud.GetComponent<LocalPlayerHUD>().SetGun(gameObject);
-        playerHud.GetComponent<PlayerHUD>().SetGun(gameObject);
+        //playerHud.GetComponent<PlayerHUD>().SetGun(gameObject);
         //playerCamera = playerCameraTransform.gameObject;
-
+        m_playerId = m_playerScript.m_playerID;
+        m_playerTeam = m_playerScript.m_team;
     }
 	
 	// Update is called once per frame
@@ -52,7 +57,7 @@ public class Gun : MonoBehaviour {
         }
         else
         {
-            if (!CheckForFullMagazine() && Input.GetButtonDown("Reload"))
+            if (!CheckForFullMagazine() && Input.GetButtonDown("Reload"+m_playerId))
             {
                 Reload();
             }
@@ -123,7 +128,7 @@ public class Gun : MonoBehaviour {
         bool doesHaveMag = CheckMagCount();
         if (!reloading && doesHaveMag)
         {
-            if ((Input.GetButton("Fire1") || Input.GetButtonDown("Fire1") )&& Time.time > nextFire)
+            if ((Input.GetAxis("Fire" + m_playerId) == 1) || (Input.GetButtonDown("Fire" + m_playerId)) && Time.time > nextFire)
             {
                 FireRayCast();
                 SpawnParticle();
@@ -142,19 +147,26 @@ public class Gun : MonoBehaviour {
 
     void FireRayCast()
     {
+        
         int x = Screen.width / 2;
         int y = Screen.height / 2;
-        Ray ray = playerCamera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
+        Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
         RaycastHit hit;
 
-        if (Physics.Raycast(ray, out hit))
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity))
         {
-            if (hit.collider.tag == "Target")
+            print(hit.collider.gameObject.tag);
+            if (hit.collider.tag == "Player")
             {
-                hit.collider.gameObject.GetComponent<Player>().TakeDamage(10);
+                print("hit something");
+
+                if (hit.collider.gameObject.GetComponent<LocalPlayer>().m_team != m_playerTeam)
+                {
+                    hit.collider.gameObject.GetComponent<LocalPlayer>().TakeDamage(10);
+                }
             }
         }
-        Debug.DrawRay(ray.origin, ray.direction, Color.green, 99f);
+        Debug.DrawLine(ray.origin, hit.point, Color.black, 99f);
     }
 
     public int GetMagCount()

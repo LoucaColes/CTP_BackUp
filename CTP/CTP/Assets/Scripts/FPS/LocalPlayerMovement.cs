@@ -12,6 +12,8 @@ public class LocalPlayerMovement : MonoBehaviour {
     private float m_timer;
     public float m_timeInterval;
     private LayerMask layerMask;
+    public LocalPlayer m_playerScript;
+    private int m_playerId;
 
     // Use this for initialization
     void Start()
@@ -20,13 +22,14 @@ public class LocalPlayerMovement : MonoBehaviour {
         rb = GetComponent<Rigidbody>();
         layerMask = 1 << 8;
         layerMask = ~layerMask;
+        m_playerId = m_playerScript.m_playerID;
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
-        float moveHorizontal = Input.GetAxis("Horizontal");
-        float moveVertical = Input.GetAxis("Vertical");
+        float moveHorizontal = Input.GetAxis("Horizontal"+m_playerId);
+        float moveVertical = Input.GetAxis("Vertical" + m_playerId);
 
         Vector3 movement = new Vector3(moveHorizontal, -0.5f, moveVertical);
 
@@ -47,7 +50,7 @@ public class LocalPlayerMovement : MonoBehaviour {
             
         }
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetAxis("Jump" + m_playerId) == 1 || Input.GetButtonDown("Jump"+m_playerId))
         {
             FireRay();
             if (grounded)

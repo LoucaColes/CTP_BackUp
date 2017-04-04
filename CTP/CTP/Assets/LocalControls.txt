@@ -1,0 +1,15 @@
+CTP Local Controls
+
+Local Player 1
+Movement - WASD/Left analogue stick
+Camera Movement - Mouse/Right analogue stick
+Fire - F/Right trigger
+Reload - R/X button
+Jump - Space/A button
+
+Local Player 2
+Movement - Arrow keys/Left analogue stick
+Camera Movement - IJKL/Right analogue stick
+Fire - / or Right trigger
+Reload - M/X button
+Jump - N/A button

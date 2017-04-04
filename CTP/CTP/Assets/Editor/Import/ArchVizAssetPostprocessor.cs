@@ -11,8 +11,37 @@ public class ArchVizAssetPostprocessor : AssetPostprocessor {
     private List<GameObject> m_childObjects;
     [SerializeField]
     private List<GameObject> m_parentsCreated;
-    private GameObject m_mainParent;
-    private bool m_sortByCat = false, m_sortByType = false, m_sortBySubType = true;
+    private GameObject m_mainParent, m_noBimDefGO;
+    private bool m_sortByCat = false, m_sortByType = false, m_sortBySubType = false;
+
+    // Initial Function
+    void OnPreprocessModel()
+    {
+        m_childObjects = new List<GameObject>();
+        m_parentsCreated = new List<GameObject>();
+        ImportSortingConfig importSortingConfig = Configuration.GetImportSortConfig();
+        m_sortByCat = importSortingConfig.GetUseCat();
+        m_sortBySubType = importSortingConfig.GetUseSubType();
+        m_sortByType = importSortingConfig.GetUseType();
+    }
+
+    // Final Function
+    void OnPostprocessModel(GameObject g)
+    {
+        // Behaviour for doors
+        // JL: TEMP
+        m_mainParent = g;
+        m_noBimDefGO = new GameObject("No Bim Definition Game Objects");
+        m_noBimDefGO.transform.parent = m_mainParent.transform;
+        GroupObjects();
+
+        PostprocessDoors(g);
+        PostprocessorMeshColliders(g);
+        //PostProcessLighting (g);
+        PostProcessLayers(g);
+
+        
+    }
 
     private string GetBIMId(GameObject go)
     {
@@ -220,32 +249,7 @@ public class ArchVizAssetPostprocessor : AssetPostprocessor {
         go.tag = tagName;        // Add the tag
     }
 
-    // Initial Function
-    void OnPreprocessModel()
-    {
-        m_childObjects = new List<GameObject>();
-        m_parentsCreated = new List<GameObject>();
-        
-    }
-
-    // Final Function
-	void OnPostprocessModel(GameObject g)
-	{
-        // Behaviour for doors
-        // JL: TEMP
-        m_mainParent = g;
-        GameObject t_tempGO = new GameObject("Test");
-        t_tempGO.transform.parent = m_mainParent.transform;
-
-        
-
-        PostprocessDoors (g);
-		PostprocessorMeshColliders (g);
-		//PostProcessLighting (g);
-        PostProcessLayers(g);
-
-        GroupObjects();
-    }
+   
 
     void GroupObjects()
     {
@@ -257,7 +261,10 @@ public class ArchVizAssetPostprocessor : AssetPostprocessor {
                 BIMDefinition t_bimDefScript = child.gameObject.GetComponent<BIMDefinition>();
                 CheckForParent(child.gameObject, t_bimDefScript);
             }
-            
+            if (!child.gameObject.GetComponent<BIMDefinition>())
+            {
+                child.gameObject.transform.parent = m_noBimDefGO.transform;
+            }
         }
     }
 
@@ -284,67 +291,26 @@ public class ArchVizAssetPostprocessor : AssetPostprocessor {
                 CreateParent(_child, t_parentsName);
             }
         }
-        if (m_parentsCreated.Count > 0 && m_parentsCreated.Count < 30)
-        {
-            int t_int = m_parentsCreated.Count + 1;
-            Debug.Log("Attempting to create parent: " + t_int);
-            for (int i = 0; i < m_parentsCreated.Count; i++)
-            {
-                if (m_parentsCreated[i].name.Contains(_bimDefScript.SubType))
-                {
-                    Debug.Log("Found a parent, adding child to parent now");
-                    AddChildToParent(m_parentsCreated[i], _child);
-                }
-                if (i == m_parentsCreated.Count - 1 && !m_parentsCreated[i].name.Contains(_bimDefScript.SubType))
-                {
-                    Debug.Log("Didnt find a parent, creating new one now");
-                    t_parentsName = _bimDefScript.SubType;
-                    CreateParent(_child, t_parentsName);
-                }
-            }
-        }
-        //else
+        //if (m_parentsCreated.Count > 0 && m_parentsCreated.Count < 30)
         //{
-        //    bool foundParent = false;
+        //    int t_int = m_parentsCreated.Count + 1;
+        //    Debug.Log("Attempting to create parent: " + t_int);
         //    for (int i = 0; i < m_parentsCreated.Count; i++)
         //    {
-        //        if (m_sortByCat && (m_parentsCreated[i].name == _bimDefScript.Category))
+        //        if (m_parentsCreated[i].name.Contains(_bimDefScript.SubType))
         //        {
+        //            Debug.Log("Found a parent, adding child to parent now");
         //            AddChildToParent(m_parentsCreated[i], _child);
-        //            foundParent = true;
         //        }
-        //        if (m_sortByType && (m_parentsCreated[i].name == _bimDefScript.Type))
+        //        if (i == m_parentsCreated.Count - 1 && !m_parentsCreated[i].name.Contains(_bimDefScript.SubType))
         //        {
-        //            AddChildToParent(m_parentsCreated[i], _child);
-        //            foundParent = true;
-        //        }
-        //        if (m_sortBySubType && (m_parentsCreated[i].name == _bimDefScript.SubType))
-        //        {
-        //            AddChildToParent(m_parentsCreated[i], _child);
-        //            foundParent = true;
-        //        }
-
-        //        // if havent found parent create new one
-        //        if (!foundParent && i == m_parentsCreated.Count - 1)
-        //        {
-        //            if (m_sortByCat)
-        //            {
-        //                t_parentsName = _bimDefScript.Category;
-        //                CreateParent(_child, t_parentsName);
-        //            }
-        //            if (m_sortByType)
-        //            {
-        //                t_parentsName = _bimDefScript.Type;
-        //                CreateParent(_child, t_parentsName);
-        //            }
-        //            if (m_sortBySubType)
-        //            {
-        //                t_parentsName = _bimDefScript.SubType;
-        //                CreateParent(_child, t_parentsName);
-        //            }
+        //            Debug.Log("Didnt find a parent, creating new one now");
+        //            t_parentsName = _bimDefScript.SubType;
+        //            CreateParent(_child, t_parentsName);
         //        }
         //    }
         //}
+        
     }
 
     void CreateParent(GameObject _child, string _parentsName)
@@ -452,6 +418,7 @@ public class ArchVizAssetPostprocessor : AssetPostprocessor {
 			// Add a sphere collider to the Game Object
 			SphereCollider sphereCollider = door.AddComponent<SphereCollider> ();
 			sphereCollider.isTrigger = true;
+            sphereCollider.radius = 1.5f;
 			
 			//Debug.Log ("* DOOR = " + door.name + " ***JL TEST*** COLLIDER" + sphereCollider.radius + " NAMED " + sphereCollider.name);
 			// Debug.Log ("*** Collider Added with radius: " + sphereCollider.radius);

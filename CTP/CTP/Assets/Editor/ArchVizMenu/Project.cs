@@ -20,6 +20,14 @@ public class Project : MonoBehaviour
         Selection.activeObject = asset;
     }
 
+    [MenuItem("Arch Viz/Project/Create Import Sorting Configuration")]
+    public static void CreateImportSortingConfig()
+    {
+        ImportSortingConfigWind window = ScriptableObject.CreateInstance<ImportSortingConfigWind>();
+        //window.ShowPopup();
+        window.Show();
+    }
+
     [MenuItem("Arch Viz/Project/Create Asset Configuration")]
     public static void CreateAssetConfig()
     {
